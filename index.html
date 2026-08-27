@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="color-scheme" content="light only">
+<title>Internal OE Project Timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light only;
+  --orange:#E8732C;--orange-dark:#D6611F;--orange-light:#FBEEE5;
+  --ink:#2B2B2B;--navy:#1B3A6B;--gray:#6B6B6B;--gray-light:#9A9A9A;
+  --border:#E0DDD8;--red:#C0392B;--red-light:#FBEAE8;--gray-row:#F6F4F1;
+  --green:#1A7F4B;--green-light:#E6F4ED;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:light only;background:#fff}
+body{font-family:'Inter',-apple-system,sans-serif;background:#fff!important;color:var(--ink);min-height:100vh;-webkit-text-fill-color:initial}
+.app{max-width:760px;margin:0 auto;padding:3rem 1.5rem 5rem}
+
+h1.title{font-family:'Kalam',cursive;font-weight:700;font-size:2rem;color:var(--orange);text-align:center;margin-bottom:.4rem;line-height:1.3}
+.subtitle{text-align:center;color:var(--gray);font-size:.85rem;margin-bottom:2.5rem}
+
+/* Rows */
+.row{display:grid;gap:1.2rem;margin-bottom:1.2rem}
+.row-3{grid-template-columns:1fr 1fr 1fr}
+.row-2{grid-template-columns:1fr 1fr}
+@media(max-width:640px){.row-3,.row-2{grid-template-columns:1fr}}
+
+/* Box */
+.box{border:1px solid var(--border);border-radius:8px;padding:1.1rem 1rem;background:#fff;position:relative;transition:border-color .15s}
+.box-label{font-size:.78rem;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.55rem}
+.box-value{font-size:1rem;font-weight:600;color:var(--ink);min-height:1.5rem}
+.box-value.placeholder{color:var(--gray-light);font-weight:400}
+.box.auto{background:var(--gray-row);border-style:dashed}
+.box.auto .box-label::after{content:' · AUTO';color:var(--orange);font-size:.7rem}
+
+/* Date button */
+.date-btn{width:100%;background:none;border:none;padding:0;cursor:pointer;text-align:left;font-family:inherit;display:flex;align-items:center;justify-content:space-between;outline:none}
+.date-btn:focus .box-value{color:var(--orange)}
+.cal-icon{color:var(--gray-light);font-size:1rem;flex-shrink:0}
+
+/* Prompt message */
+.prompt-msg{display:flex;align-items:flex-start;gap:.55rem;padding:.65rem .75rem;background:var(--orange-light);border-radius:6px;border-left:3px solid var(--orange)}
+.prompt-msg .pm-icon{font-size:.85rem;margin-top:.05rem;flex-shrink:0}
+.prompt-msg .pm-text{font-size:.8rem;color:var(--ink);line-height:1.45}
+
+/* Live date display */
+.live-date{font-size:1.1rem;font-weight:700;color:var(--navy)}
+
+/* Toast */
+.toast{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:50;background:#fff;border:1.5px solid var(--orange);border-radius:6px;padding:.5rem .75rem;font-size:.8rem;color:var(--ink);box-shadow:0 4px 16px rgba(0,0,0,.12);align-items:center;gap:.5rem;max-width:260px;white-space:normal;width:max-content}
+.toast.show{display:flex}
+.toast-icon{background:var(--orange);color:#fff;border-radius:50%;width:18px;height:18px;min-width:18px;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0}
+
+/* Calendar */
+.cal-wrap{position:relative}
+.cal-popup{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:200;background:#fff;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.18);border:1px solid var(--border);width:268px;overflow:hidden}
+.cal-popup.open{display:block}
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:.55rem .75rem;border-bottom:1px solid var(--border)}
+.cal-nav-btn{background:none;border:none;cursor:pointer;color:var(--gray);font-size:1.2rem;padding:.2rem .35rem;border-radius:4px;line-height:1;font-family:inherit}
+.cal-nav-btn:hover{background:var(--gray-row)}
+.cal-title{font-size:.88rem;font-weight:700;color:var(--ink)}
+.cal-selects{display:flex;gap:.35rem;padding:.4rem .75rem;border-bottom:1px solid var(--border);background:#fafafa}
+.cal-selects select{flex:1;border:1px solid var(--border);border-radius:4px;padding:.25rem .35rem;font-size:.76rem;font-family:inherit;color:var(--ink);background:#fff;cursor:pointer;outline:none}
+.cal-selects select:focus{border-color:var(--orange)}
+.cal-body{padding:.35rem .45rem .55rem}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:.15rem}
+.cal-dow span{text-align:center;font-size:.68rem;font-weight:700;color:var(--gray);padding:.2rem 0}
+.cal-dow span.weekend-hdr{color:#ccc}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+.cal-day{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:.78rem;border-radius:50%;cursor:pointer;background:none;border:none;font-family:inherit;color:var(--ink);transition:background .1s,color .1s}
+.cal-day:hover:not([disabled]){background:var(--orange-light);color:var(--orange)}
+.cal-day.selected{background:var(--navy);color:#fff!important;font-weight:700}
+.cal-day.today{border:1.5px solid var(--orange)}
+.cal-day[disabled]{cursor:default}
+.cal-day.other-month{color:#ddd}
+.cal-day.weekend{color:#ccc}
+.cal-day.weekend:hover{background:none!important;color:#ccc!important}
+
+/* Divider */
+.section-divider{display:flex;align-items:center;gap:.75rem;margin:1.6rem 0 1.2rem}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.section-divider span{font-size:.75rem;font-weight:700;color:var(--gray-light);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+
+.footer-note{text-align:center;color:var(--gray-light);font-size:.75rem;margin-top:3rem}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1 class="title">Internal OE Project Timeline</h1>
+  <p class="subtitle">Benefits Consulting · Workstream Solutions</p>
+
+  <!-- ROW 1 -->
+  <div class="row row-3">
+
+    <!-- Box 1: Renewal Effective Date -->
+    <div class="box">
+      <div class="box-label">Renewal Effective Date</div>
+      <div class="cal-wrap" id="renewalWrap">
+        <button class="date-btn" id="renewalBtn" onclick="toggleCal('renewal')" type="button">
+          <span class="box-value placeholder" id="renewalText">MM/DD/YYYY</span>
+          <span class="cal-icon">📅</span>
+        </button>
+        <div class="toast" id="renewalToast">
+          <span class="toast-icon">!</span>
+          <span>Date selected must be first of the month</span>
+        </div>
+        <div class="cal-popup" id="renewalCal">
+          <div class="cal-header">
+            <button class="cal-nav-btn" onclick="calNav('renewal',-1)" type="button">&#8249;</button>
+            <span class="cal-title" id="renewalCalTitle"></span>
+            <button class="cal-nav-btn" onclick="calNav('renewal',1)" type="button">&#8250;</button>
+          </div>
+          <div class="cal-selects">
+            <select id="renewalCalMonth" onchange="calSelChange('renewal')"></select>
+            <select id="renewalCalYear" onchange="calSelChange('renewal')"></select>
+          </div>
+          <div class="cal-body">
+            <div class="cal-dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span class="weekend-hdr">Sa</span></div>
+            <div class="cal-days" id="renewalDays"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Box 2: Targeted OE Launch Date -->
+    <div class="box">
+      <div class="box-label">Targeted OE Launch Date</div>
+      <div class="cal-wrap" id="launchWrap">
+        <button class="date-btn" id="launchBtn" onclick="toggleCal('launch')" type="button">
+          <span class="box-value placeholder" id="launchText">MM/DD/YYYY</span>
+          <span class="cal-icon">📅</span>
+        </button>
+        <div class="cal-popup" id="launchCal">
+          <div class="cal-header">
+            <button class="cal-nav-btn" onclick="calNav('launch',-1)" type="button">&#8249;</button>
+            <span class="cal-title" id="launchCalTitle"></span>
+            <button class="cal-nav-btn" onclick="calNav('launch',1)" type="button">&#8250;</button>
+          </div>
+          <div class="cal-selects">
+            <select id="launchCalMonth" onchange="calSelChange('launch')"></select>
+            <select id="launchCalYear" onchange="calSelChange('launch')"></select>
+          </div>
+          <div class="cal-body">
+            <div class="cal-dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span class="weekend-hdr">Sa</span></div>
+            <div class="cal-days" id="launchDays"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Box 3: Return Renewal Documents Due (auto) -->
+    <div class="box auto">
+      <div class="box-label">Return Renewal Documents Due</div>
+      <div class="box-value placeholder" id="renewalDocsDue">— set launch date</div>
+    </div>
+
+  </div>
+
+  <div class="section-divider"><span>Docs Received</span></div>
+
+  <!-- ROW 2 -->
+  <div class="row row-2">
+
+    <!-- Box 4: Docs Received Date -->
+    <div class="box">
+      <div class="box-label">Docs Received Date</div>
+      <div class="cal-wrap" id="docsWrap">
+        <button class="date-btn" id="docsBtn" onclick="toggleCal('docs')" type="button">
+          <span class="box-value placeholder" id="docsText">MM/DD/YYYY</span>
+          <span class="cal-icon">📅</span>
+        </button>
+        <div class="cal-popup" id="docsCal">
+          <div class="cal-header">
+            <button class="cal-nav-btn" onclick="calNav('docs',-1)" type="button">&#8249;</button>
+            <span class="cal-title" id="docsCalTitle"></span>
+            <button class="cal-nav-btn" onclick="calNav('docs',1)" type="button">&#8250;</button>
+          </div>
+          <div class="cal-selects">
+            <select id="docsCalMonth" onchange="calSelChange('docs')"></select>
+            <select id="docsCalYear" onchange="calSelChange('docs')"></select>
+          </div>
+          <div class="cal-body">
+            <div class="cal-dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span class="weekend-hdr">Sa</span></div>
+            <div class="cal-days" id="docsDays"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Box 5: Earliest OE Live Date (auto) -->
+    <div class="box auto" id="box5">
+      <div class="box-label">Earliest OE Live Date</div>
+      <div id="box5Content">
+        <div class="prompt-msg">
+          <span class="pm-icon">💡</span>
+          <span class="pm-text">Enter the client's docs received date so you can provide their targeted OE live date.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="footer-note">Paychex · Internal OE Project Timeline</div>
+
+<script>
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const calState={
+  renewal:{year:new Date().getFullYear(),month:new Date().getMonth(),selected:null,disableWeekends:false},
+  launch: {year:new Date().getFullYear(),month:new Date().getMonth(),selected:null,disableWeekends:true},
+  docs:   {year:new Date().getFullYear(),month:new Date().getMonth(),selected:null,disableWeekends:false}
+};
+
+function fmtDate(d){
+  return String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0')+'/'+d.getFullYear();
+}
+
+function isBizDay(d){const dow=d.getDay();return dow!==0&&dow!==6;}
+function addBizDays(start,n){
+  let d=new Date(start);const step=n>=0?1:-1;let c=0;
+  while(c<Math.abs(n)){d.setDate(d.getDate()+step);if(isBizDay(d))c++;}
+  return d;
+}
+
+// ── RENDER CALENDAR ──────────────────────────────────────────────────────
+function renderCal(id){
+  const s=calState[id];
+  const yr=s.year,mo=s.month;
+  document.getElementById(id+'CalTitle').textContent=MONTHS[mo]+' '+yr;
+
+  const mSel=document.getElementById(id+'CalMonth');
+  mSel.innerHTML=MONTHS.map((m,i)=>`<option value="${i}"${i===mo?' selected':''}>${m}</option>`).join('');
+
+  const ySel=document.getElementById(id+'CalYear');
+  const nowY=new Date().getFullYear();
+  ySel.innerHTML='';
+  for(let y=nowY-1;y<=nowY+6;y++){
+    const o=document.createElement('option');
+    o.value=y;o.textContent=y;if(y===yr)o.selected=true;
+    ySel.appendChild(o);
+  }
+
+  const container=document.getElementById(id+'Days');
+  container.innerHTML='';
+  const firstDow=new Date(yr,mo,1).getDay();
+  const daysInMo=new Date(yr,mo+1,0).getDate();
+  const prevDays=new Date(yr,mo,0).getDate();
+  const today=new Date();today.setHours(0,0,0,0);
+
+  for(let i=firstDow-1;i>=0;i--){
+    const btn=document.createElement('button');
+    btn.type='button';btn.className='cal-day other-month';btn.textContent=prevDays-i;btn.disabled=true;
+    container.appendChild(btn);
+  }
+  for(let d=1;d<=daysInMo;d++){
+    const date=new Date(yr,mo,d);
+    const dow=date.getDay();
+    const isWeekend=dow===0||dow===6;
+    const isToday=date.getTime()===today.getTime();
+    const isSel=s.selected&&date.getTime()===s.selected.getTime();
+    const btn=document.createElement('button');
+    btn.type='button';
+    let cls='cal-day';
+    if(isWeekend&&s.disableWeekends)cls+=' weekend';
+    if(isToday&&!isSel)cls+=' today';
+    if(isSel)cls+=' selected';
+    btn.className=cls;btn.textContent=d;
+    if(isWeekend&&s.disableWeekends){btn.disabled=true;}
+    else{btn.onclick=()=>pickDate(id,yr,mo,d);}
+    container.appendChild(btn);
+  }
+  const total=firstDow+daysInMo;
+  const rem=total%7===0?0:7-(total%7);
+  for(let d=1;d<=rem;d++){
+    const btn=document.createElement('button');
+    btn.type='button';btn.className='cal-day other-month';btn.textContent=d;btn.disabled=true;
+    container.appendChild(btn);
+  }
+}
+
+function pickDate(id,y,m,d){
+  const date=new Date(y,m,d);
+  calState[id].selected=date;
+  const textEl=document.getElementById(id+'Text');
+  textEl.textContent=fmtDate(date);
+  textEl.classList.remove('placeholder');
+  closeCal(id);
+
+  if(id==='renewal'&&d!==1){
+    const toast=document.getElementById('renewalToast');
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'),4000);
+  }
+
+  updateCalcs();
+}
+
+function toggleCal(id){
+  const cal=document.getElementById(id+'Cal');
+  const isOpen=cal.classList.contains('open');
+  document.querySelectorAll('.cal-popup').forEach(c=>c.classList.remove('open'));
+  if(!isOpen){
+    const s=calState[id];
+    if(s.selected){s.year=s.selected.getFullYear();s.month=s.selected.getMonth();}
+    renderCal(id);
+    cal.classList.add('open');
+  }
+}
+function closeCal(id){document.getElementById(id+'Cal').classList.remove('open');}
+function calNav(id,dir){
+  const s=calState[id];s.month+=dir;
+  if(s.month>11){s.month=0;s.year++;}
+  if(s.month<0){s.month=11;s.year--;}
+  renderCal(id);
+}
+function calSelChange(id){
+  calState[id].month=parseInt(document.getElementById(id+'CalMonth').value);
+  calState[id].year=parseInt(document.getElementById(id+'CalYear').value);
+  renderCal(id);
+}
+
+document.addEventListener('click',function(e){
+  ['renewal','launch','docs'].forEach(id=>{
+    const wrap=document.getElementById(id+'Wrap');
+    if(wrap&&!wrap.contains(e.target))closeCal(id);
+  });
+});
+
+// ── THRESHOLD ─────────────────────────────────────────────────────────────
+const NEW_LOGIC_DATE = new Date(2027, 0, 1); // 1/1/2027
+
+function getOffsets(){
+  const renewal = calState.renewal.selected;
+  if(renewal && renewal >= NEW_LOGIC_DATE){
+    return { docsOffset: -22, liveOffset: 21 };
+  }
+  return { docsOffset: -21, liveOffset: 20 };
+}
+
+// ── CALCULATIONS ──────────────────────────────────────────────────────────
+function updateCalcs(){
+  const renewal = calState.renewal.selected;
+  const { docsOffset, liveOffset } = getOffsets();
+
+  // Box 3: Return Renewal Documents Due
+  const duEl = document.getElementById('renewalDocsDue');
+  if(!renewal){
+    duEl.innerHTML = `<div class="prompt-msg"><span class="pm-icon">💡</span><span class="pm-text">Enter the Renewal Effective Date to calculate this due date.</span></div>`;
+    duEl.style.color = '';
+  } else if(calState.launch.selected){
+    const due = addBizDays(calState.launch.selected, docsOffset);
+    duEl.innerHTML = '';
+    duEl.textContent = fmtDate(due);
+    duEl.classList.remove('placeholder');
+    duEl.style.color = 'var(--ink)';
+  } else {
+    duEl.innerHTML = '';
+    duEl.textContent = '— set launch date';
+    duEl.classList.add('placeholder');
+    duEl.style.color = '';
+  }
+
+  // Box 5: Earliest OE Live Date — operates independently of Renewal
+  const b5 = document.getElementById('box5Content');
+  if(calState.docs.selected){
+    const live = addBizDays(calState.docs.selected, liveOffset);
+    b5.innerHTML = `<div class="live-date">${fmtDate(live)}</div><div style="font-size:.78rem;color:var(--gray);margin-top:.3rem">${liveOffset} business days after docs received</div>`;
+  } else {
+    b5.innerHTML = `<div class="prompt-msg"><span class="pm-icon">💡</span><span class="pm-text">Enter the client's docs received date so you can provide their targeted OE live date.</span></div>`;
+  }
+}
+</script>
+</body>
+</html>
